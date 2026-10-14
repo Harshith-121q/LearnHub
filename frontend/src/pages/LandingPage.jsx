@@ -1,242 +1,503 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import TechCard from '../components/TechCard';
-import { API_ENDPOINTS } from '../utils/constants';
-import { healthService } from '../services/api';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import UserDashboardBanner from '../components/UserDashboardBanner';
+import { useAuth } from '../context/useAuth';
 
-/**
- * LandingPage component for Phase 2: MySQL Database Configuration & Verification.
- */
-export default function LandingPage({ healthResult, healthLoading, onRefreshHealth }) {
-  const [detailedData, setDetailedData] = useState(null);
-  const [loadingDetailed, setLoadingDetailed] = useState(false);
+export default function LandingPage({ onOpenAuth }) {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const [activeCourseModal, setActiveCourseModal] = useState(null);
 
-  const fetchDetailedStatus = useCallback(async () => {
-    setLoadingDetailed(true);
-    const data = await healthService.getHealthStatus();
-    setDetailedData(data);
-    setLoadingDetailed(false);
-  }, []);
-
-  useEffect(() => {
-    fetchDetailedStatus();
-  }, [fetchDetailedStatus]);
-
-  const handleRefreshAll = () => {
-    if (onRefreshHealth) onRefreshHealth();
-    fetchDetailedStatus();
+  const handleDashboardClick = () => {
+    if (!isAuthenticated) {
+      onOpenAuth('register');
+      return;
+    }
+    if (user?.role === 'ROLE_ADMIN') navigate('/admin/dashboard');
+    else if (user?.role === 'ROLE_INSTRUCTOR') navigate('/instructor/dashboard');
+    else navigate('/student/dashboard');
   };
 
-  const techStackList = [
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    role: 'STUDENT',
+    interest: 'Java Programming',
+    message: '',
+  });
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    if (!isAuthenticated && onOpenAuth) {
+      onOpenAuth('register');
+    } else {
+      setFormSubmitted(true);
+      setTimeout(() => setFormSubmitted(false), 4000);
+    }
+  };
+
+  const courses = [
     {
-      title: 'React.js + Vite',
-      role: 'Frontend Layer',
-      badge: 'Client',
-      icon: '⚛️',
-      description: 'Lightning-fast modern React single-page application built on Vite with modular design.',
+      id: 'java-programming',
+      title: 'Java Programming',
+      subtitle: 'Complete enterprise software development track from JVM fundamentals to advanced OOP.',
+      image: '/course-java.jpg',
+      icon: '☕',
+      badge: 'Core Track',
+      level: 'Beginner to Advanced',
+      duration: '45+ Hours',
+      modules: [
+        'Module 1: Java Fundamentals (JDK, JRE, JVM, Variables, Data Types, Operators)',
+        'Module 2: Control Flow (Conditional Statements, Switch, For & While Loops, Break/Continue)',
+        'Module 3: Methods, Arrays & String Manipulation',
+        'Module 4: Object-Oriented Programming (Classes, Inheritance, Polymorphism, Encapsulation)',
+        'Module 5: Exception Handling, Generics & Collections Framework',
+        'Module 6: Advanced Fundamentals, Multi-threading & Practical Practice',
+      ],
     },
     {
-      title: 'Spring Boot 3',
-      role: 'Backend REST API',
-      badge: 'Server',
-      icon: '🍃',
-      description: 'Robust Java enterprise backend with structured controllers, services, and global exception handling.',
+      id: 'python-programming',
+      title: 'Python Programming',
+      subtitle: 'Versatile programming fundamentals, structured data analysis, and modular software engineering.',
+      image: null,
+      fallbackGradient: 'linear-gradient(135deg, #1e293b, #0f172a)',
+      icon: '🐍',
+      badge: 'Core Track',
+      level: 'Beginner to Advanced',
+      duration: '40+ Hours',
+      modules: [
+        'Module 1: Python Fundamentals (Installation, First Script, Variables, I/O, Operators)',
+        'Module 2: Conditional Statements, Loops & Logical Control Flow',
+        'Module 3: Strings, Lists, Tuples, Sets & Dictionaries',
+        'Module 4: Functions, Lambdas, Scopes & Modular Architecture',
+        'Module 5: Object-Oriented Python (Classes, Dunder Methods, Inheritance)',
+        'Module 6: File Handling, Exceptions & Practical Software Projects',
+      ],
     },
     {
-      title: 'Spring Data JPA',
-      role: 'Object-Relational Mapping',
-      badge: 'ORM',
+      id: 'software-architecture',
+      title: 'Full-Stack Architecture',
+      subtitle: 'Modern software engineering principles, robust REST API designs, and scalable database integration.',
+      image: null,
+      fallbackGradient: 'linear-gradient(135deg, #0f172a, #1a2744)',
       icon: '🏛️',
-      description: 'Hibernate-powered persistence layer with declarative repositories and entity lifecycle auditing.',
-    },
-    {
-      title: 'MySQL 8.0',
-      role: 'Relational Database',
-      badge: 'Database',
-      icon: '🐬',
-      description: 'Structured relational data storage configured safely through environment variables (DB_URL, DB_USERNAME, DB_PASSWORD).',
-    },
-    {
-      title: 'Jakarta Validation',
-      role: 'Data Validation',
-      badge: 'Security',
-      icon: '🛡️',
-      description: 'Standard declarative input validation for REST requests with centralized error formatting.',
-    },
-    {
-      title: 'Spring Boot DevTools',
-      role: 'Developer Experience',
-      badge: 'Tooling',
-      icon: '⚡',
-      description: 'Automatic restart and live-reload capabilities for streamlined full-stack development cycles.',
+      badge: 'Engineering',
+      level: 'Intermediate',
+      duration: '35+ Hours',
+      modules: [
+        'Module 1: REST API Architectural Principles & HTTP Conventions',
+        'Module 2: Spring Boot 3 Core, Controllers & Layered Services',
+        'Module 3: Relational Database Persistence with Spring Data JPA & Hibernate',
+        'Module 4: Secure Stateless Authentication with Spring Security 6 & JWT',
+        'Module 5: Dynamic Client Integration with React.js & State Management',
+        'Module 6: Production Engineering, Testing & Deployment Pipelines',
+      ],
     },
   ];
-
-  const packagesList = [
-    { name: 'config', desc: 'CORS & global application configuration beans' },
-    { name: 'controller', desc: 'REST endpoints and HTTP request handlers' },
-    { name: 'service', desc: 'Business logic layer and database health validation' },
-    { name: 'repository', desc: 'Spring Data JPA data access interfaces' },
-    { name: 'entity', desc: 'JPA database entity definitions' },
-    { name: 'dto', desc: 'Data Transfer Objects & request/response payloads' },
-    { name: 'exception', desc: 'Centralized exception handlers & custom errors' },
-  ];
-
-  const dbState = detailedData?.data?.database?.status || 'CHECKING';
-  const isDbUp = dbState === 'UP';
 
   return (
-    <div className="landing-page" id="landing-page">
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-pill">
-          <span className="pill-dot"></span>
-          <span>Phase 2 &mdash; MySQL Database Connectivity</span>
-        </div>
-        <h1 className="hero-heading">
-          Skill Learning &amp; <span className="gradient-text">Assessment Platform</span>
-        </h1>
-        <p className="hero-subheading">
-          Welcome to <strong>LearnHub</strong>. Phase 2 configures and validates Spring Boot integration with MySQL 8.0
-          and Spring Data JPA with resilient health verification.
-        </p>
+    <div className="prosperum-landing" id="prosperum-landing">
+      {/* Cinematic Dark Navy Hero Section */}
+      <section className="prosperum-hero" id="hero-section">
+        <div className="hero-backdrop-overlay"></div>
+        <div className="hero-content-wrapper">
+          <div className="hero-grid">
+            {/* Left Hero Column */}
+            <div className="hero-text-block">
+              <div className="hero-gold-pill">
+                <span className="gold-pill-dot"></span>
+                <span>Structured Programming &amp; Progress Platform</span>
+              </div>
+              <h1 className="hero-luxury-title">
+                Master In-Demand <br />
+                <span className="title-serif">Programming Excellence</span>
+              </h1>
+              <p className="hero-luxury-desc">
+                Learn modern Java and Python step by step through structured modules, verified code examples,
+                and persistent progress tracking tailored for academic and professional achievement.
+              </p>
 
-        {/* Live Connectivity Test Card */}
-        <div className="connectivity-card" id="connectivity-card">
-          <div className="connectivity-card-header">
-            <div className="card-title-group">
-              <span className="card-indicator-icon">🔌</span>
-              <div>
-                <h2 className="card-title">Full-Stack &amp; Database Health Status</h2>
-                <p className="card-subtitle">Endpoints: <code>GET {API_ENDPOINTS.HEALTH}</code> &bull; <code>GET {API_ENDPOINTS.HEALTH_STATUS}</code></p>
+              <div className="hero-cta-group">
+                <button
+                  onClick={() => navigate('/courses')}
+                  className="btn-gold-primary"
+                  id="btn-explore-curriculum"
+                >
+                  Explore Courses &rarr;
+                </button>
+                <button
+                  onClick={handleDashboardClick}
+                  className="btn-navy-outline"
+                  id="btn-hero-auth-cta"
+                >
+                  {isAuthenticated ? 'Open My Workspace &rarr;' : 'Get Started Free'}
+                </button>
               </div>
             </div>
-            <button
-              onClick={handleRefreshAll}
-              disabled={healthLoading || loadingDetailed}
-              className="refresh-btn"
-              id="btn-recheck-health"
-            >
-              {healthLoading || loadingDetailed ? 'Testing...' : '🔄 Re-check Health'}
-            </button>
+
+            {/* Right Hero Column: Luxury Floating Feature Tiles */}
+            <div className="hero-badges-block">
+              <div className="floating-tiles-stack">
+                <div className="floating-tile tile-growth">
+                  <span className="tile-icon">↗</span>
+                  <div className="tile-text">
+                    <span className="tile-headline">Persistent Progress</span>
+                    <span className="tile-sub">Real-time lesson tracking</span>
+                  </div>
+                </div>
+
+                <div className="floating-tile tile-gold">
+                  <span className="tile-icon">👥</span>
+                  <div className="tile-text">
+                    <span className="tile-headline">Dedicated Instructors</span>
+                    <span className="tile-sub">Assigned course monitoring</span>
+                  </div>
+                </div>
+
+                <div className="floating-tile tile-security">
+                  <span className="tile-icon">🛡️</span>
+                  <div className="tile-text">
+                    <span className="tile-headline">Admin Quality Curated</span>
+                    <span className="tile-sub">Structured zero-gap lessons</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="connectivity-body">
-            <div className="metrics-row">
-              <div className="metric-item">
-                <span className="metric-label">Backend API</span>
-                <span className={`metric-value ${healthResult?.success ? 'text-success' : 'text-danger'}`}>
-                  {healthResult?.success ? 'ONLINE (200)' : 'OFFLINE'}
-                </span>
+          {/* User Status / Quick Actions if authenticated or guest CTA */}
+          <div className="hero-banner-slot">
+            <UserDashboardBanner onOpenAuth={onOpenAuth} />
+          </div>
+        </div>
+      </section>
+
+      {/* 3 Overlapping Feature Cards */}
+      <section className="overlapping-cards-section" id="overview-cards">
+        <div className="prosperum-container">
+          <div className="overlapping-cards-grid">
+            <div className="overlap-card">
+              <div className="overlap-card-icon-wrap">
+                <span className="overlap-icon">☕</span>
               </div>
-              <div className="metric-item">
-                <span className="metric-label">MySQL Database</span>
-                <span className={`metric-value ${isDbUp ? 'text-success' : 'text-danger'}`}>
-                  {isDbUp ? `CONNECTED (${detailedData?.data?.database?.database || 'MySQL'})` : 'UNAVAILABLE'}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">API Latency</span>
-                <span className="metric-value">{healthResult?.latencyMs ? `${healthResult.latencyMs} ms` : '--'}</span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Overall Health</span>
-                <span className={`metric-value ${isDbUp ? 'text-success' : 'text-danger'}`}>
-                  {detailedData?.data?.status || (healthResult?.success ? 'UP' : 'DOWN')}
-                </span>
-              </div>
+              <h3 className="overlap-card-title">Java Programming</h3>
+              <p className="overlap-card-desc">
+                From JVM fundamentals, data types, and control flow to advanced object-oriented design and collections.
+              </p>
+              <button
+                onClick={() => setActiveCourseModal(courses[0])}
+                className="overlap-card-link"
+              >
+                Discover Curriculum &rarr;
+              </button>
             </div>
 
-            {/* Health Payload Details */}
-            {detailedData && (
-              <div className="payload-box">
-                <div className="payload-box-header">
-                  <span>Server Response Envelope (<code>/api/health/status</code> &mdash; HTTP {detailedData.statusCode || 200})</span>
+            <div className="overlap-card">
+              <div className="overlap-card-icon-wrap gold-wrap">
+                <span className="overlap-icon">🐍</span>
+              </div>
+              <h3 className="overlap-card-title">Python Programming</h3>
+              <p className="overlap-card-desc">
+                Master Python syntax, built-in data structures, modular functions, OOP, and real-world scripting projects.
+              </p>
+              <button
+                onClick={() => setActiveCourseModal(courses[1])}
+                className="overlap-card-link"
+              >
+                Discover Curriculum &rarr;
+              </button>
+            </div>
+
+            <div className="overlap-card">
+              <div className="overlap-card-icon-wrap navy-wrap">
+                <span className="overlap-icon">📈</span>
+              </div>
+              <h3 className="overlap-card-title">Persistent Progress</h3>
+              <p className="overlap-card-desc">
+                Automatic formula-driven progress computation: (completed / total) &times; 100 with seamless cross-session resumption.
+              </p>
+              <button
+                onClick={() => onOpenAuth(isAuthenticated ? 'me' : 'login')}
+                className="overlap-card-link"
+              >
+                View Tracking &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Courses / "Our Educational Solutions" Section */}
+      <section className="solutions-section" id="solutions-section">
+        <div className="prosperum-container">
+          <div className="solutions-header">
+            <h2 className="solutions-title">Our Learning Solutions</h2>
+            <p className="solutions-subtitle">
+              Comprehensive, structured educational curriculums authored by platform administrators.
+            </p>
+          </div>
+
+          <div className="solutions-grid">
+            {courses.map((course) => (
+              <div key={course.id} className="solution-card">
+                <div className="solution-card-media">
+                  {course.image ? (
+                    <img src={course.image} alt={course.title} className="solution-img" />
+                  ) : (
+                    <div className="solution-img-fallback" style={{ background: course.fallbackGradient }}>
+                      <span className="fallback-symbol">{course.icon}</span>
+                      <span className="fallback-tag">{course.badge}</span>
+                    </div>
+                  )}
+                  <div className="solution-badge-overlay">
+                    <span className="badge-overlay-icon">{course.icon}</span>
+                  </div>
+                </div>
+
+                <div className="solution-card-body">
+                  <div className="solution-meta-row">
+                    <span className="solution-pill">{course.level}</span>
+                    <span className="solution-duration">⏱️ {course.duration}</span>
+                  </div>
+                  <h3 className="solution-card-title">{course.title}</h3>
+                  <p className="solution-card-desc">{course.subtitle}</p>
+
+                  <div className="solution-modules-preview">
+                    <span className="modules-count-tag">{course.modules.length} Ordered Modules</span>
+                    <ul className="modules-bullet-list">
+                      {course.modules.slice(0, 3).map((mod, i) => (
+                        <li key={i}>{mod.split('(')[0]}</li>
+                      ))}
+                    </ul>
+                  </div>
+
                   <button
-                    onClick={fetchDetailedStatus}
-                    disabled={loadingDetailed}
-                    className="detail-toggle-btn"
-                    id="btn-fetch-details"
+                    onClick={() => setActiveCourseModal(course)}
+                    className="solution-btn-gold"
                   >
-                    {loadingDetailed ? 'Refreshing...' : 'Refresh Status Envelope'}
+                    View Curriculum
                   </button>
                 </div>
-                <pre className="payload-json" id="payload-health-json">
-                  {JSON.stringify(detailedData, null, 2)}
-                </pre>
               </div>
-            )}
+            ))}
+          </div>
 
-            {detailedData && !isDbUp && (
-              <div className="connection-error-box">
-                <p className="error-title">⚠️ MySQL Database is not yet connected</p>
-                <p className="error-desc">
-                  {detailedData?.data?.database?.message || 'Unable to establish database connection.'}
-                  <br />
-                  Make sure <code>learnhub_db</code> is created and valid credentials are supplied via <code>DB_USERNAME</code> and <code>DB_PASSWORD</code>.
-                </p>
-              </div>
-            )}
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <button
+              onClick={() => navigate('/courses')}
+              className="cta-btn cta-btn-primary"
+              style={{ padding: '0.85rem 2.25rem', fontSize: '1rem' }}
+              id="btn-browse-all-catalog"
+            >
+              Browse Complete Course Catalog &rarr;
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Tech Stack Breakdown */}
-      <section className="tech-section">
-        <div className="section-header">
-          <h2 className="section-title">Integrated Technology Stack</h2>
-          <p className="section-subtitle">
-            Enterprise-grade, robust components configured for scalability and modularity.
-          </p>
-        </div>
-        <div className="tech-grid" id="tech-stack-grid">
-          {techStackList.map((item) => (
-            <TechCard
-              key={item.title}
-              title={item.title}
-              role={item.role}
-              badge={item.badge}
-              icon={item.icon}
-              description={item.description}
-            />
-          ))}
-        </div>
-      </section>
+      {/* "How We Work" & Quick Registration Section */}
+      <section className="how-we-work-section" id="how-we-work-section">
+        <div className="prosperum-container">
+          <div className="how-we-work-grid">
+            {/* Left: How We Work timeline */}
+            <div className="how-work-info">
+              <h2 className="how-work-title">How We Work</h2>
+              <p className="how-work-desc">
+                LearnHub delivers a guided learning methodology where topics are ordered sequentially to guarantee comprehension.
+              </p>
 
-      {/* Backend Architecture Structure */}
-      <section className="architecture-section">
-        <div className="section-header">
-          <h2 className="section-title">Backend Architecture Layers</h2>
-          <p className="section-subtitle">
-            Organized strictly into clean, maintainable Spring Boot packages.
-          </p>
-        </div>
-        <div className="packages-grid">
-          {packagesList.map((pkg) => (
-            <div key={pkg.name} className="package-item">
-              <span className="package-badge">com.learnhub.{pkg.name}</span>
-              <p className="package-desc">{pkg.desc}</p>
+              <div className="steps-timeline">
+                <div className="timeline-step">
+                  <div className="step-circle">
+                    <span>1</span>
+                  </div>
+                  <div className="step-content">
+                    <h4 className="step-heading">Course Enrollment</h4>
+                    <p className="step-desc">
+                      Explore published courses in Java or Python. One-click enrollment safeguards against duplicates.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="timeline-connector"></div>
+
+                <div className="timeline-step">
+                  <div className="step-circle step-gold">
+                    <span>2</span>
+                  </div>
+                  <div className="step-content">
+                    <h4 className="step-heading">Sequential Learning</h4>
+                    <p className="step-desc">
+                      Study lessons in ordered succession with verified code examples, conceptual explanations, and duration estimates.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="timeline-connector"></div>
+
+                <div className="timeline-step">
+                  <div className="step-circle step-navy">
+                    <span>3</span>
+                  </div>
+                  <div className="step-content">
+                    <h4 className="step-heading">Persistent Progress</h4>
+                    <p className="step-desc">
+                      Mark completed lessons to automatically increment your persistent progress percentage and resume instantly.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Database Connection Instructions */}
-      <section className="db-notice-section">
-        <div className="db-notice-card">
-          <div className="db-notice-icon">🗄️</div>
-          <div className="db-notice-content">
-            <h3 className="db-notice-title">MySQL Database Configuration Guide</h3>
-            <p className="db-notice-text">
-              The project is configured with Spring Data JPA and MySQL Connector. To connect your MySQL database:
-            </p>
-            <ol className="db-steps-list">
-              <li>Open MySQL / MySQL Workbench and create the database: <code>CREATE DATABASE IF NOT EXISTS learnhub_db;</code></li>
-              <li>Set your MySQL password in <code>backend/src/main/resources/application.properties</code> or via environment variable <code>$env:DB_PASSWORD="your_password"</code>.</li>
-              <li>Re-check health or restart the backend: <code>.\mvnw.cmd spring-boot:run</code>.</li>
-            </ol>
+            {/* Right: Rich Dark Navy Quick Consultation / Registration Box */}
+            <div className="consultation-box">
+              <div className="consultation-inner">
+                <h3 className="consultation-title">Start Learning Today</h3>
+                <p className="consultation-subtitle">
+                  Create your account to unlock courses, monitor progress, and access learning modules.
+                </p>
+
+                {formSubmitted ? (
+                  <div className="consultation-success">
+                    <span className="success-icon">✓</span>
+                    <h4>Account Request Received</h4>
+                    <p>Welcome to LearnHub! Please proceed to sign in with your credentials.</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleContactSubmit} className="consultation-form">
+                    <div className="form-row-dual">
+                      <div className="form-group-prosperum">
+                        <label>Your Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Alex Morgan"
+                          value={contactForm.name}
+                          onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="form-group-prosperum">
+                        <label>Email Address</label>
+                        <input
+                          type="email"
+                          placeholder="alex@learnhub.com"
+                          value={contactForm.email}
+                          onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row-dual">
+                      <div className="form-group-prosperum">
+                        <label>Platform Role</label>
+                        <select
+                          value={contactForm.role}
+                          onChange={(e) => setContactForm({ ...contactForm, role: e.target.value })}
+                        >
+                          <option value="STUDENT">Student (Learner)</option>
+                          <option value="INSTRUCTOR">Instructor (Course Monitor)</option>
+                        </select>
+                      </div>
+                      <div className="form-group-prosperum">
+                        <label>Target Course</label>
+                        <select
+                          value={contactForm.interest}
+                          onChange={(e) => setContactForm({ ...contactForm, interest: e.target.value })}
+                        >
+                          <option value="Java Programming">Java Programming</option>
+                          <option value="Python Programming">Python Programming</option>
+                          <option value="Full-Stack Architecture">Full-Stack Architecture</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group-prosperum">
+                      <label>Learning Goals or Questions</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Tell us what you are aiming to build or learn..."
+                        value={contactForm.message}
+                        onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                      ></textarea>
+                    </div>
+
+                    <button type="submit" className="btn-consultation-submit" id="btn-submit-quick-form">
+                      {isAuthenticated ? 'Update Preferences' : 'Register & Start Learning'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Course Detail Modal */}
+      {activeCourseModal && (
+        <div className="curriculum-modal-backdrop" onClick={() => setActiveCourseModal(null)}>
+          <div className="curriculum-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-top-bar">
+              <div className="modal-title-group">
+                <span className="modal-course-icon">{activeCourseModal.icon}</span>
+                <div>
+                  <h3 className="modal-course-title">{activeCourseModal.title}</h3>
+                  <span className="modal-course-sub">{activeCourseModal.level} &bull; {activeCourseModal.duration}</span>
+                </div>
+              </div>
+              <button
+                className="modal-close-cross"
+                onClick={() => setActiveCourseModal(null)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="modal-scroll-area">
+              <p className="modal-course-desc">{activeCourseModal.subtitle}</p>
+
+              <h4 className="curriculum-heading">Curriculum Modules &amp; Topics</h4>
+              <div className="modal-modules-accordion">
+                {activeCourseModal.modules.map((m, idx) => {
+                  const parts = m.split(': ');
+                  const modTitle = parts[0];
+                  const modTopics = parts[1] || '';
+                  return (
+                    <div key={idx} className="accordion-module-card">
+                      <div className="accordion-module-header">
+                        <span className="module-number-badge">{idx + 1}</span>
+                        <span className="module-name-text">{modTitle}</span>
+                      </div>
+                      {modTopics && (
+                        <p className="module-topics-snippet">{modTopics}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="modal-bottom-actions">
+              <button
+                className="btn-gold-primary"
+                onClick={() => {
+                  setActiveCourseModal(null);
+                  onOpenAuth(isAuthenticated ? 'me' : 'register');
+                }}
+              >
+                {isAuthenticated ? 'Open Course in Workspace' : 'Enroll in This Course'}
+              </button>
+              <button
+                className="btn-modal-cancel"
+                onClick={() => setActiveCourseModal(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

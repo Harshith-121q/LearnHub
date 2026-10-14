@@ -180,6 +180,29 @@ To connect your local MySQL database:
 
 ---
 
+## 🔒 Security & JWT Authentication (Phase 3)
+
+LearnHub implements stateless authentication powered by **Spring Security** and signed **JSON Web Tokens (JJWT)**:
+
+### 🔑 Authentication Architecture:
+- **`JwtTokenProvider`**: Generates and cryptographically verifies HMAC-SHA256 signed access tokens with custom claims (`userId`, `email`).
+- **`JwtAuthenticationFilter`**: Intercepts requests, parses `Authorization: Bearer <token>`, validates tokens, and populates the `SecurityContext`.
+- **`SecurityConfig`**: Enforces stateless sessions (`SessionCreationPolicy.STATELESS`), permits public endpoints (`/api/health/**`, `/api/auth/**`), and secures domain endpoints.
+- **`CustomUserDetailsService`**: Authenticates users against the database by either username or email.
+
+### 🌐 REST API Endpoints:
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Public | Register student or instructor (`username`, `email`, `password`, `fullName`, `role`) |
+| `POST` | `/api/auth/login` | Public | Authenticate user and receive signed JWT token |
+| `GET` | `/api/auth/me` | Authenticated | Retrieve authenticated user profile via Bearer token |
+| `GET` | `/api/auth/roles` | Public | Fetch selectable platform registration roles |
+| `GET` | `/api/health` | Public | Basic backend service health ping |
+| `GET` | `/api/health/status` | Public | Detailed full-stack and MySQL database connectivity status |
+
+---
+
 ## 🔒 CORS Configuration
 
 CORS is globally configured in `backend/src/main/java/com/learnhub/config/CorsConfig.java`. By default, it allows requests from:
@@ -194,8 +217,9 @@ Origins can be overridden via `cors.allowed-origins` in `application.properties`
 
 | Command | Working Directory | Description |
 |---|---|---|
-| `.\mvnw.cmd compile` | `backend/` | Compiles Java backend code |
-| `.\mvnw.cmd test` | `backend/` | Runs Spring Boot test suite |
-| `.\mvnw.cmd spring-boot:run` | `backend/` | Starts backend server on port 8080 |
+| `.\mvnw.cmd test` | `backend/` | Runs backend test suite (all 7 security & health tests pass) |
+| `.\mvnw.cmd spring-boot:run` | `backend/` | Starts Spring Boot backend server on port 8080 |
+| `npm run lint` | `frontend/` | Lints frontend with oxlint (0 errors, 0 warnings) |
 | `npm run build` | `frontend/` | Builds frontend production bundle |
-| `npm run dev` | `frontend/` | Starts frontend development server |
+| `npm run dev` | `frontend/` | Starts Vite frontend development server on port 5173 |
+

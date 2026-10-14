@@ -18,8 +18,18 @@ export function useHealthCheck() {
   }, []);
 
   useEffect(() => {
-    performCheck();
-  }, [performCheck]);
+    let active = true;
+    healthService.checkHealth().then(res => {
+      if (active) {
+        setResult(res);
+        setLoading(false);
+        setLastChecked(new Date().toLocaleTimeString());
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return {
     result,

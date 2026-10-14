@@ -25,6 +25,8 @@ pnpm-debug.log*
 
 # Java & Backend (Maven)
 backend/target/
+backend/data/
+*.db
 *.class
 *.jar
 *.war
@@ -41,6 +43,12 @@ backend/*.log
 .project
 .classpath
 .factorypath
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
 
 # Crash logs
 hs_err_pid*
